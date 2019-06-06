@@ -1,2 +1,2 @@
 # keyarray
-Single header implementation of dynamic arrays of custom data types, indexed by a unique string or unsigned key.
+Single header implementation of a dynamic array of a custom data type, indexed by a unique string or unsigned key.
