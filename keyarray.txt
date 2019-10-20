@@ -1,0 +1,217 @@
+
+  Key Array Documentation
+  Copyright 2019 Orlando Llanes
+
+  https://github.com/orlandol/keyarray
+
+  Contents
+  1) License
+  2) Introduction
+  3) Key types
+  4) Data types
+  5) Reference
+
+  ==========
+  1) License
+  ==========
+
+  Key Array is released under the MIT license.
+
+  keyarray.h contains the license, a quick reference, and the
+  implementation. It may be distributed/used by itself.
+
+  You may include this documentation for convenience, however, doing
+  so is not required.
+
+  ===============
+  2) Introduction
+  ===============
+
+  Key Array is a dynamic array, of unique and sorted key values. It
+  uses a modified binary array search to find the next insertion point.
+  It automatically grows the list by 8 items to buffer insertions, and
+  moves items upward as needed when adding a new item.
+
+  The implementation is a set of declaration macros in a single header
+  file, designed to simplify use and to personalize function names.
+
+  It is meant for small and simple lists, up to approximately 100,000
+  items. The actual amount depends on the computer running the code.
+  Note that the larger the list, the slower insertions become.
+
+  ============
+  3) Key types
+  ============
+
+  Key array currently only supports string and unsigned keys.
+
+  String keys use a string compare to iterate through the list, whereas
+  unsigned keys compare values directly.
+
+  String keys are automatically allocated and released by Key Array.
+
+  =============
+  4) Data types
+  =============
+
+  Data is developer defined. It can be either a simple type
+  (eg: unsigned, etc), or a complex type (eg: structs, etc).
+
+  If data is a complex type, subfields are accessed through the
+  data field (eg: data.field1). It is accessed directly from
+  list->item[].data
+
+  Key array treats all data as potentially dynamic. As such, it uses
+  developer defined functions to allocate or release a data item.
+  In cases of simple types, the developer defined functions can be
+  empty.
+
+  ============
+  5) Reference
+  ============
+
+  Key Array is designed to customize type and functions names that are
+  more meaningful.
+
+  ------------------------------------------
+  5a) List, item, and data type declarations
+  ------------------------------------------
+  DECLARE_STRING_KEYARRAY_TYPES( typeName, dataType )
+  DECLARE_UINT_KEYARRAY_TYPES( typeName, dataType )
+
+  Declares the list as typeName. Declares the key and item types
+  internally. Declares the data field as specified dataType.
+
+  Declaration doesn't persist between macros, so typeName must be
+  specified as listType in the function declarations.
+
+  ---------------------------------------
+  5b) Allocate list function declarations
+  ---------------------------------------
+  DECLARE_STRING_KEYARRAY_CREATE( funcName, listType )
+  DECLARE_UINT_KEYARRAY_CREATE( funcName, listType )
+
+  Declares list allocate function:
+    listType* funcName( size_t reserveCount )
+
+  reserveCount can either be 0, or the number of items to pre-allocate.
+
+  -------------------------------------------------------------
+  5c) Free list, and developer free data, function declarations
+  -------------------------------------------------------------
+  DECLARE_STRING_KEYARRAY_FREE( funcName, listType, freeDataFunc )
+  DECLARE_UINT_KEYARRAY_FREE( funcName, listType, freeDataFunc )
+
+  Declares a list release function as funcName:
+    void funcName( listType** keyList )
+
+  freeDataFunc is the name of a developer defined function:
+    void freeDataFunc( dataType* data ) {
+    ...
+    }
+
+  freeDataFunc is called directly in the implementation. It can either
+  be empty, modify values, or release allocated data.
+
+  -------------------------------------
+  5d) Insert data function declarations
+  -------------------------------------
+  DECLARE_STRING_KEYARRAY_INSERT( funcName, listType, dataType )
+  DECLARE_UINT_KEYARRAY_INSERT( funcName, listType, dataType )
+
+  Declares data insert function as funcName, respectively:
+    int funcName( listType* keyList, char* key, dataType* data )
+    int funcName( listType* keyList, unsigned key, dataType* data )
+
+  Inserts data, sorted by key. The developer must allocate dynamic
+  data, if applicable, prior to calling insert.
+
+  Return values:
+    0 = allocation/etc failure, or key already exists.
+    Non-zero = Successful
+
+  ---------------
+  5e) Remove data
+  ---------------
+  DECLARE_STRING_KEYARRAY_REMOVE( funcName, listType, freeDataFunc )
+  DECLARE_UINT_KEYARRAY_REMOVE( funcName, listType, freeDataFunc )
+
+  Declares data remove function as funcName, respectively:
+    void funcName( listType* keyList, char* key )
+    void funcName( listType* keyList, unsigned key )
+
+  Removes the key and its associated data from the list.
+
+  Internally calls developer defined data release function:
+    void freeDataFunc( dataType* data ) {
+    ...
+    }
+
+  ---------------
+  5f) Data lookup
+  ---------------
+  DECLARE_STRING_KEYARRAY_RETRIEVE( funcName, listType, dataType )
+  DECLARE_UINT_KEYARRAY_RETRIEVE( funcName, listType, dataType )
+
+  Declares data lookup function as funcName, respectively:
+    int funcName( listType* keyList, char* key, dataType* destData )
+    int funcName( listType* keyList, unsigned key, dataType* destData )
+
+  Looks for data by key, and copies its contents to destData.
+  destData must have the same dataType, to receive a copy.
+
+  Return values:
+    0 = error in state, or key not found.
+    Non-zero = Successful
+
+  ---------------
+  5g) Modify data
+  ---------------
+  DECLARE_STRING_KEYARRAY_MODIFY( funcName, listType, dataType )
+  DECLARE_UINT_KEYARRAY_MODIFY( funcName, listType, dataType )
+
+  Declares modify data function as funcName, respectively:
+    int funcName( listType* keyList, char* key, dataType* sourceData )
+    int funcName( listType* keyList, unsigned key, dataType* sourceData )
+
+  Looks for data by key, and copies back sourceData. Assumes that
+  developer worked from original item data.
+
+  sourceData must have the same dataType, to copy back to the list.
+
+  Return values:
+    0 = error in state, or key not found.
+    Non-zero = Successful
+
+  -------------------------
+  5h) Remove buffered space
+  -------------------------
+  DECLARE_STRING_KEYARRAY_RELEASEUNUSED( funcName, listType )
+
+  Declares a function as funcName, to remove buffered space
+    void funcName( listType* keyList )
+
+  Assumes that items past itemCount are not in use.
+
+  -------------
+  5i) Copy list
+  -------------
+  DECLARE_STRING_KEYARRAY_COPY( funcName, listType, dataType,
+      copyDataFunc, freeDataFunc )
+
+  Declares a function as funcName, to copy a list:
+    listType* funcName( listType* sourceList )
+
+  Internally calls developer defined data copy function:
+    void copyDataFunc( dataType* dest, dataType* source ) {
+    ...
+    }
+
+  Internally calls developer defined data release function:
+    void freeDataFunc( dataType* data ) {
+    ...
+    }
+
+  Return values:
+    NULL = allocate/etc failure. freeDataFunc releases partial data.
+    Non-NULL = New copy of sourceList
