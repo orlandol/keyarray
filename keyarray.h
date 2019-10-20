@@ -142,7 +142,7 @@ SOFTWARE.
   */
 
   /* Copy list
-  #define DECLARE_STRING_KEYARRAY_COPY( funcName, listType, dataType,\
+  DECLARE_STRING_KEYARRAY_COPY( funcName, listType, dataType,
       copyDataFunc, freeDataFunc )
 
   Declares a function as funcName, to copy a list:
