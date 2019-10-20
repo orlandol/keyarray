@@ -29,6 +29,141 @@ SOFTWARE.
 #include <string.h>
 
 /*
+ * ================
+ *  Quick Reference
+ * ================
+ */
+
+  /* Declare types
+  DECLARE_STRING_KEYARRAY_TYPES( typeName, dataType )
+  DECLARE_UINT_KEYARRAY_TYPES( typeName, dataType )
+
+  Declares list as typeName, item, and data type.
+
+  typeName is specified as listType in function declarations.
+  */
+
+  /* Create list
+  DECLARE_STRING_KEYARRAY_CREATE( funcName, listType )
+  DECLARE_UINT_KEYARRAY_CREATE( funcName, listType )
+
+  Declares list allocate function:
+    listType* funcName( size_t reserveCount )
+
+  reserveCount can either be 0, or the number of items to pre-allocate.
+  */
+
+  /* Release list
+  DECLARE_STRING_KEYARRAY_FREE( funcName, listType, freeDataFunc )
+  DECLARE_UINT_KEYARRAY_FREE( funcName, listType, freeDataFunc )
+
+  Declares list release function as funcName:
+    void funcName( listType** keyList )
+
+  Internally calls developer defined data release function:
+    void freeDataFunc( dataType* data ) {
+    ...
+    }
+  */
+
+  /* Insert data
+  DECLARE_STRING_KEYARRAY_INSERT( funcName, listType, dataType )
+  DECLARE_UINT_KEYARRAY_INSERT( funcName, listType, dataType )
+
+  Declares data insert function as funcName, respectively:
+    int funcName( listType* keyList, char* key, dataType* data )
+    int funcName( listType* keyList, unsigned key, dataType* data )
+
+  Inserts data, sorted by key. The developer must allocate dynamic
+  data, if applicable, prior to calling insert.
+
+  Return values:
+    0 = allocation/etc failure, or key already exists.
+    Non-zero = Successful
+  */
+
+  /* Remove data
+  DECLARE_STRING_KEYARRAY_REMOVE( funcName, listType, freeDataFunc )
+  DECLARE_UINT_KEYARRAY_REMOVE( funcName, listType, freeDataFunc )
+
+  Declares data remove function as funcName, respectively:
+    void funcName( listType* keyList, char* key )
+    void funcName( listType* keyList, unsigned key )
+
+  Removes the key and its associated data from the list.
+
+  Internally calls developer defined data release function:
+    void freeDataFunc( dataType* data ) {
+    ...
+    }
+  */
+
+  /* Data lookup
+  DECLARE_STRING_KEYARRAY_RETRIEVE( funcName, listType, dataType )
+  DECLARE_UINT_KEYARRAY_RETRIEVE( funcName, listType, dataType )
+
+  Declares data lookup function as funcName, respectively:
+    int funcName( listType* keyList, char* key, dataType* destData )
+    int funcName( listType* keyList, unsigned key, dataType* destData )
+
+  Looks for data by key, and copies its contents to destData.
+  destData must have the same dataType, to receive a copy.
+
+  Return values:
+    0 = error in state, or key not found.
+    Non-zero = Successful
+  */
+
+  /* Modify data
+  DECLARE_STRING_KEYARRAY_MODIFY( funcName, listType, dataType )
+  DECLARE_UINT_KEYARRAY_MODIFY( funcName, listType, dataType )
+
+  Declares modify data function as funcName, respectively:
+    int funcName( listType* keyList, char* key, dataType* sourceData )
+    int funcName( listType* keyList, unsigned key, dataType* sourceData )
+
+  Looks for data by key, and copies back sourceData. Assumes that
+  developer worked from original item data.
+
+  sourceData must have the same dataType, to copy back to the list.
+
+  Return values:
+    0 = error in state, or key not found.
+    Non-zero = Successful
+  */
+
+  /* Remove buffered space
+  DECLARE_STRING_KEYARRAY_RELEASEUNUSED( funcName, listType )
+
+  Declares a function as funcName, to remove buffered space
+    void funcName( listType* keyList )
+
+  Assumes that items past itemCount are not in use.
+  */
+
+  /* Copy list
+  #define DECLARE_STRING_KEYARRAY_COPY( funcName, listType, dataType,\
+      copyDataFunc, freeDataFunc )
+
+  Declares a function as funcName, to copy a list:
+    listType* funcName( listType* sourceList )
+
+  Internally calls developer defined data copy function:
+    void copyDataFunc( dataType* dest, dataType* source ) {
+    ...
+    }
+
+  Internally calls developer defined data release function:
+    void freeDataFunc( dataType* data ) {
+    ...
+    }
+
+  Return values:
+    NULL = allocate/etc failure. freeDataFunc releases partial data.
+    Non-NULL = New copy of sourceList
+  */
+
+/*
  * =================================
  *  String Key Array implementation
  * =================================
@@ -278,6 +413,49 @@ SOFTWARE.
       }\
       \
       retrieveIndex = (leftIndex + rightIndex) / 2;\
+    }\
+    \
+    return 0;\
+  }
+
+  #define DECLARE_STRING_KEYARRAY_MODIFY( funcName, listType, dataType )\
+  int funcName( listType* keyList, char* key, dataType* sourceData ) {\
+    unsigned leftIndex;\
+    unsigned rightIndex;\
+    unsigned modifyIndex;\
+    int result;\
+    unsigned reservedCount;\
+    unsigned itemCount;\
+    listType##Item* item;\
+    \
+    if( !(keyList && keyList->item && key && (*key) && destData) ) {\
+      return 0;\
+    }\
+    \
+    reservedCount = keyList->reservedCount;\
+    itemCount = keyList->itemCount;\
+    item = keyList->item;\
+    \
+    /* Search for item */\
+    leftIndex = 0;\
+    rightIndex = itemCount;\
+    modifyIndex = itemCount / 2;\
+    \
+    while( leftIndex < rightIndex ) {\
+      result = strcmp(item[modifyIndex].key, key);\
+      \
+      if( result == 0 ) {\
+        memcpy( &(item[modifyIndex].data), sourceData, sizeof(dataType) );\
+        return 1;\
+      }\
+      \
+      if( result > 0 ) {\
+        rightIndex = modifyIndex;\
+      } else {\
+        leftIndex = modifyIndex + 1;\
+      }\
+      \
+      modifyIndex = (leftIndex + rightIndex) / 2;\
     }\
     \
     return 0;\
@@ -611,6 +789,47 @@ SOFTWARE.
       }\
       \
       retrieveIndex = (leftIndex + rightIndex) / 2;\
+    }\
+    \
+    return 0;\
+  }
+
+  #define DECLARE_UINT_KEYARRAY_MODIFY( funcName, listType, dataType )\
+  int funcName( listType* keyList, unsigned key,\
+      dataType* sourceData ) {\
+    unsigned leftIndex;\
+    unsigned rightIndex;\
+    unsigned modifyIndex;\
+    unsigned reservedCount;\
+    unsigned itemCount;\
+    listType##Item* item;\
+    \
+    if( !(keyList && keyList->item && destData) ) {\
+      return 0;\
+    }\
+    \
+    reservedCount = keyList->reservedCount;\
+    itemCount = keyList->itemCount;\
+    item = keyList->item;\
+    \
+    /* Search for insert position */\
+    leftIndex = 0;\
+    rightIndex = itemCount;\
+    modifyIndex = itemCount / 2;\
+    \
+    while( leftIndex < rightIndex ) {\
+      if( item[modifyIndex].key == key ) {\
+        memcpy( &(item[modifyIndex].data), sourceData, sizeof(dataType) );\
+        return 1;\
+      }\
+      \
+      if( item[modifyIndex].key > key ) {\
+        rightIndex = modifyIndex;\
+      } else {\
+        leftIndex = modifyIndex + 1;\
+      }\
+      \
+      modifyIndex = (leftIndex + rightIndex) / 2;\
     }\
     \
     return 0;\
