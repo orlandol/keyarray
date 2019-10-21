@@ -70,8 +70,8 @@
   5) Reference
   ============
 
-  Key Array is designed to customize type and functions names that are
-  more meaningful.
+  Key Array is designed to allow the developer to give its
+  types and functions more meaningful names.
 
   ------------------------------------------
   5a) List, item, and data type declarations
@@ -80,9 +80,9 @@
   DECLARE_UINT_KEYARRAY_TYPES( typeName, dataType )
 
   Declares the list as typeName. Declares the key and item types
-  internally. Declares the data field as specified dataType.
+  internally. Declares the data field as the specified dataType.
 
-  Declaration doesn't persist between macros, so typeName must be
+  Declarations do not persist between macros, so typeName must be
   specified as listType in the function declarations.
 
   ---------------------------------------
@@ -91,10 +91,11 @@
   DECLARE_STRING_KEYARRAY_CREATE( funcName, listType )
   DECLARE_UINT_KEYARRAY_CREATE( funcName, listType )
 
-  Declares list allocate function:
+  Function prototype:
     listType* funcName( size_t reserveCount )
 
-  reserveCount can either be 0, or the number of items to pre-allocate.
+  Declares a function to allocate the initial list. Optionally
+  pre-allocates reserveCount items.
 
   -------------------------------------------------------------
   5c) Free list, and developer free data, function declarations
@@ -102,13 +103,16 @@
   DECLARE_STRING_KEYARRAY_FREE( funcName, listType, freeDataFunc )
   DECLARE_UINT_KEYARRAY_FREE( funcName, listType, freeDataFunc )
 
-  Declares a list release function as funcName:
+  Function prototype:
     void funcName( listType** keyList )
 
   freeDataFunc is the name of a developer defined function:
     void freeDataFunc( dataType* data ) {
     ...
     }
+
+  Declares a function to release the list, after it releases each item
+  using the developer's freeDataFunc.
 
   freeDataFunc is called directly in the implementation. It can either
   be empty, modify values, or release allocated data.
