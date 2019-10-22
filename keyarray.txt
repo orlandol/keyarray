@@ -4,12 +4,37 @@
 
   https://github.com/orlandol/keyarray
 
-  Contents
+  =================
+  Table of Contents
+  =================
   1) License
+
   2) Introduction
+
   3) Key types
+
   4) Data types
+
   5) Reference
+    5.1) List, item, and data type declarations
+    5.2) Allocate list function declarations
+    5.3) Free list, and developer free data, function declarations
+    5.4) Insert data function declarations
+    5.5) Remove data
+    5.6) Data lookup
+    5.7) Modify data
+    5.8) Find list index
+    5.9) Remove buffered space
+    5.10) Copy list
+
+  6) Examples
+    6.1) Simple String Key List - Color name to RGB value
+    6.2) Simple Unsigned Key List - TBD
+    6.3) Complex String Key List - TBD
+    6.4) Complex Unsigned Key List - TBD
+
+  A) Todo list
+    A.1) Implement string maximum length
 
   ==========
   1) License
@@ -18,76 +43,102 @@
   Key Array is released under the MIT license.
 
   keyarray.h contains the license, a quick reference, and the
-  implementation. It may be distributed/used by itself.
+    implementation. It may be distributed/used by itself.
 
-  You may include this documentation for convenience, however, doing
-  so is not required.
+  You may include this documentation for convenience, however,
+    doing so is not required.
 
   ===============
   2) Introduction
   ===============
 
-  Key Array is a dynamic array, of unique and sorted key values. It
-  uses a modified binary array search to find the next insertion point.
-  It automatically grows the list by 8 items to buffer insertions, and
-  moves items upward as needed when adding a new item.
+  Key Array is a dynamic array of developer defined data, sorted by
+    unique key values. It uses a modified binary array search to find
+    the next insertion point. It automatically grows by 8 items, to
+    buffer insertions, and moves items upward as needed when adding
+    a new item.
 
-  The implementation is a set of declaration macros in a single header
-  file, designed to simplify use and to personalize function names.
+  Key Array is implemented as a set of declaration macros in a single
+    header file (keyarray.h); Designed to make code readable through
+    customizing type and function names; And designed to provide a
+    simple interface, with direct access to the list mostly as a means
+    of extending the interface.
 
-  It is meant for small and simple lists, up to approximately 100,000
-  items. The actual amount depends on the computer running the code.
-  Note that the larger the list, the slower insertions become.
+  The optimal size for Key Array is approximately 100,000 items. This
+    amount, however, can be lower depending on the target platform.
+    String key size can also reduce this amount.
 
   ============
   3) Key types
   ============
 
-  Key array currently only supports string and unsigned keys.
+  Keys are unique, and serve as a point of reference to store
+    developer defined data.
 
-  String keys use a string compare to iterate through the list, whereas
-  unsigned keys compare values directly.
+  Key Array currently only supports string and unsigned keys.
 
-  String keys are automatically allocated and released by Key Array.
+  String keys are compared using a string match function, to iterate
+    through the list. String keys are automatically allocated and
+    released by Key Array.
+
+  Unsigned key values are compared directly.
 
   =============
   4) Data types
   =============
 
-  Data is developer defined. It can be either a simple type
-  (eg: unsigned, etc), or a complex type (eg: structs, etc).
+  Developer defined data can either be a simple type
+    (eg: unsigned/etc), or a complex type (eg: struct/etc).
 
-  If data is a complex type, subfields are accessed through the
-  data field (eg: data.field1). It is accessed directly from
-  list->item[].data
+  If data is a complex type, subfields are accessed as data.subfield
 
-  Key array treats all data as potentially dynamic. As such, it uses
-  developer defined functions to allocate or release a data item.
-  In cases of simple types, the developer defined functions can be
-  empty.
+  Key array treats all data as potentially dynamic. As a result, it
+    uses developer defined functions to allocate or release a data
+    item.
+
+  In cases of simple data types, the developer defined functions
+    can be empty.
 
   ============
   5) Reference
   ============
 
-  Key Array is designed to allow the developer to give its
-  types and functions more meaningful names.
-
-  ------------------------------------------
-  5a) List, item, and data type declarations
-  ------------------------------------------
+  -------------------------------------------
+  5.1) List, item, and data type declarations
+  -------------------------------------------
   DECLARE_STRING_KEYARRAY_TYPES( typeName, dataType )
   DECLARE_UINT_KEYARRAY_TYPES( typeName, dataType )
 
+  Item type declarations, respectively:
+    typedef struct typeNameItem {
+      char* key;
+      dataType data;
+    } typeNameItem;
+
+    typedef struct typeNameItem {
+      unsigned key;
+      dataType data;
+    } typeNameItem;
+
+  List type declaration:
+    typedef struct typeName {
+      size_t reservedCount;
+      size_t itemCount;
+      typeNameItem* item;
+    } typeName;
+
   Declares the list as typeName. Declares the key and item types
-  internally. Declares the data field as the specified dataType.
+    internally. Declares the data field as the specified dataType.
 
-  Declarations do not persist between macros, so typeName must be
-  specified as listType in the function declarations.
+  Declarations do not persist between macros. typeName must be
+    specified as listType in the function declarations.
 
-  ---------------------------------------
-  5b) Allocate list function declarations
-  ---------------------------------------
+  Direct access through list->item[index].data
+    or list->item[index].data.subfield
+
+  ----------------------------------------
+  5.2) Allocate list function declarations
+  ----------------------------------------
   DECLARE_STRING_KEYARRAY_CREATE( funcName, listType )
   DECLARE_UINT_KEYARRAY_CREATE( funcName, listType )
 
@@ -95,11 +146,15 @@
     listType* funcName( size_t reserveCount )
 
   Declares a function to allocate the initial list. Optionally
-  pre-allocates reserveCount items.
+    pre-allocates reserveCount items.
 
-  -------------------------------------------------------------
-  5c) Free list, and developer free data, function declarations
-  -------------------------------------------------------------
+  Return values:
+    NULL = allocate/etc failure.
+    Non-NULL = New list.
+
+  --------------------------------------------------------------
+  5.3) Free list, and developer free data, function declarations
+  --------------------------------------------------------------
   DECLARE_STRING_KEYARRAY_FREE( funcName, listType, freeDataFunc )
   DECLARE_UINT_KEYARRAY_FREE( funcName, listType, freeDataFunc )
 
@@ -112,14 +167,14 @@
     }
 
   Declares a function to release the list, after it releases each item
-  using the developer's freeDataFunc.
+    using the developer's freeDataFunc.
 
   freeDataFunc is called directly in the implementation. It can either
-  be empty, modify values, or release allocated data.
+    be empty, modify values, or release allocated data.
 
-  -------------------------------------
-  5d) Insert data function declarations
-  -------------------------------------
+  --------------------------------------
+  5.4) Insert data function declarations
+  --------------------------------------
   DECLARE_STRING_KEYARRAY_INSERT( funcName, listType, dataType )
   DECLARE_UINT_KEYARRAY_INSERT( funcName, listType, dataType )
 
@@ -128,15 +183,15 @@
     int funcName( listType* keyList, unsigned key, dataType* data )
 
   Inserts data, sorted by key. The developer must allocate dynamic
-  data, if applicable, prior to calling insert.
+    data, if applicable, prior to calling insert.
 
   Return values:
     0 = allocation/etc failure, or key already exists.
     Non-zero = Successful
 
-  ---------------
-  5e) Remove data
-  ---------------
+  ----------------
+  5.5) Remove data
+  ----------------
   DECLARE_STRING_KEYARRAY_REMOVE( funcName, listType, freeDataFunc )
   DECLARE_UINT_KEYARRAY_REMOVE( funcName, listType, freeDataFunc )
 
@@ -151,9 +206,9 @@
     ...
     }
 
-  ---------------
-  5f) Data lookup
-  ---------------
+  ----------------
+  5.6) Data search
+  ----------------
   DECLARE_STRING_KEYARRAY_RETRIEVE( funcName, listType, dataType )
   DECLARE_UINT_KEYARRAY_RETRIEVE( funcName, listType, dataType )
 
@@ -161,16 +216,16 @@
     int funcName( listType* keyList, char* key, dataType* destData )
     int funcName( listType* keyList, unsigned key, dataType* destData )
 
-  Looks for data by key, and copies its contents to destData.
-  destData must have the same dataType, to receive a copy.
+  Searches for data by key, and copies its contents to destData.
+    destData must have the same dataType, to receive a copy.
 
   Return values:
     0 = error in state, or key not found.
     Non-zero = Successful
 
-  ---------------
-  5g) Modify data
-  ---------------
+  ----------------
+  5.7) Modify data
+  ----------------
   DECLARE_STRING_KEYARRAY_MODIFY( funcName, listType, dataType )
   DECLARE_UINT_KEYARRAY_MODIFY( funcName, listType, dataType )
 
@@ -178,8 +233,8 @@
     int funcName( listType* keyList, char* key, dataType* sourceData )
     int funcName( listType* keyList, unsigned key, dataType* sourceData )
 
-  Looks for data by key, and copies back sourceData. Assumes that
-  developer worked from original item data.
+  Searches for data by key, and copies back sourceData. Assumes that
+    developer worked from original item data.
 
   sourceData must have the same dataType, to copy back to the list.
 
@@ -187,9 +242,27 @@
     0 = error in state, or key not found.
     Non-zero = Successful
 
-  -------------------------
-  5h) Remove buffered space
-  -------------------------
+  --------------------
+  5.8) Find list index
+  --------------------
+  DECLARE_STRING_KEYARRAY_FINDINDEX( funcName, listType )
+  DECLARE_UINT_KEYARRAY_FINDINDEX( funcName, listType )
+
+  Declares key index search function as funcName, respectively:
+    size_t funcName( listType* keyList, char* key )
+    size_t funcName( listType* keyList, unsigned key )
+
+  Searches list for key, and returns the corresponding array index.
+    Index value must be used immediately, or cached with care, as
+    inserting a new item can invalidate the index.
+
+  Return values:
+    (-1) = error in state, or key not found.
+    Otherwise, the array index for key.
+
+  --------------------------
+  5.9) Remove buffered space
+  --------------------------
   DECLARE_STRING_KEYARRAY_RELEASEUNUSED( funcName, listType )
 
   Declares a function as funcName, to remove buffered space
@@ -197,9 +270,9 @@
 
   Assumes that items past itemCount are not in use.
 
-  -------------
-  5i) Copy list
-  -------------
+  ---------------
+  5.10) Copy list
+  ---------------
   DECLARE_STRING_KEYARRAY_COPY( funcName, listType, dataType,
       copyDataFunc, freeDataFunc )
 
@@ -219,3 +292,54 @@
   Return values:
     NULL = allocate/etc failure. freeDataFunc releases partial data.
     Non-NULL = New copy of sourceList
+
+  ===========
+  6) Examples
+  ===========
+
+  -----------------------------------------------------
+  6.1) Simple String Key List - Color name to RGB value
+  -----------------------------------------------------
+
+  File: strkey1.c
+  Status: In progress
+
+  Reads an unsorted array of color name/hex value pairs,
+    into a string key array.
+
+  Demonstrates:
+  - Declaration of a string key array.
+  - Customization of function names.
+  - Declaring the data field with a basic type.
+  - Minimum declarations necessary to perform its functions.
+
+  -----------------------------------
+  6.2) Simple Unsigned Key List - TBD
+  -----------------------------------
+
+  File: uintkey1.c
+  Status: Planned
+
+  ----------------------------------
+  6.3) Complex String Key List - TBD
+  ----------------------------------
+
+  File: strkey2.c
+  Status: Planned
+
+  ------------------------------------
+  6.4) Complex Unsigned Key List - TBD
+  ------------------------------------
+
+  File: uintkey2.c
+  Status: Planned
+
+  ============
+  A) Todo list
+  ============
+
+  ------------------------------------
+  A.1) Implement string maximum length
+  ------------------------------------
+  - Check for STRINGKEY_MAXLEN within each function declaration macro.
+  - Where STRINGKEY_MAXLEN not defined, default to (-1).

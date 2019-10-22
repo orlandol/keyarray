@@ -38,9 +38,32 @@ SOFTWARE.
   DECLARE_STRING_KEYARRAY_TYPES( typeName, dataType )
   DECLARE_UINT_KEYARRAY_TYPES( typeName, dataType )
 
-  Declares list as typeName, item, and data type.
+  Item type declarations, respectively:
+    typedef struct typeNameItem {
+      char* key;
+      dataType data;
+    } typeNameItem;
 
-  typeName is specified as listType in function declarations.
+    typedef struct typeNameItem {
+      unsigned key;
+      dataType data;
+    } typeNameItem;
+
+  List type declaration:
+    typedef struct typeName {
+      size_t reservedCount;
+      size_t itemCount;
+      typeNameItem* item;
+    } typeName;
+
+  Declares the list as typeName. Declares the key and item types
+    internally. Declares the data field as the specified dataType.
+
+  Declarations do not persist between macros. typeName must be
+    specified as listType in the function declarations.
+
+  Direct access through list->item[index].data
+    or list->item[index].data.subfield
   */
 
   /* Create list
@@ -51,6 +74,10 @@ SOFTWARE.
     listType* funcName( size_t reserveCount )
 
   reserveCount can either be 0, or the number of items to pre-allocate.
+
+  Return values:
+    NULL = allocate/etc failure.
+    Non-NULL = New list.
   */
 
   /* Release list
@@ -75,7 +102,7 @@ SOFTWARE.
     int funcName( listType* keyList, unsigned key, dataType* data )
 
   Inserts data, sorted by key. The developer must allocate dynamic
-  data, if applicable, prior to calling insert.
+    data, if applicable, prior to calling insert.
 
   Return values:
     0 = allocation/etc failure, or key already exists.
@@ -98,16 +125,16 @@ SOFTWARE.
     }
   */
 
-  /* Data lookup
+  /* Data search
   DECLARE_STRING_KEYARRAY_RETRIEVE( funcName, listType, dataType )
   DECLARE_UINT_KEYARRAY_RETRIEVE( funcName, listType, dataType )
 
-  Declares data lookup function as funcName, respectively:
+  Declares data search function as funcName, respectively:
     int funcName( listType* keyList, char* key, dataType* destData )
     int funcName( listType* keyList, unsigned key, dataType* destData )
 
-  Looks for data by key, and copies its contents to destData.
-  destData must have the same dataType, to receive a copy.
+  Searches for data by key, and copies its contents to destData.
+    destData must have the same dataType, to receive a copy.
 
   Return values:
     0 = error in state, or key not found.
@@ -122,14 +149,31 @@ SOFTWARE.
     int funcName( listType* keyList, char* key, dataType* sourceData )
     int funcName( listType* keyList, unsigned key, dataType* sourceData )
 
-  Looks for data by key, and copies back sourceData. Assumes that
-  developer worked from original item data.
+  Searches for data by key, and copies back sourceData. Assumes that
+    developer worked from original item data.
 
   sourceData must have the same dataType, to copy back to the list.
 
   Return values:
     0 = error in state, or key not found.
     Non-zero = Successful
+  */
+
+  /* Find list index
+  DECLARE_STRING_KEYARRAY_FINDINDEX( funcName, listType )
+  DECLARE_UINT_KEYARRAY_FINDINDEX( funcName, listType )
+
+  Declares key index search function as funcName, respectively:
+    size_t funcName( listType* keyList, char* key )
+    size_t funcName( listType* keyList, unsigned key )
+
+  Searches list for key, and returns the corresponding array index.
+    Index value must be used immediately, or cached with care, as
+    inserting a new item can invalidate the index.
+
+  Return values:
+    (-1) = error in state, or key not found.
+    Otherwise, the array index for key.
   */
 
   /* Remove buffered space
@@ -459,6 +503,48 @@ SOFTWARE.
     }\
     \
     return 0;\
+  }
+
+  #define DECLARE_STRING_KEYARRAY_FINDINDEX( funcName, listType )\
+  int funcName( listType* keyList, char* key ) {\
+    unsigned leftIndex;\
+    unsigned rightIndex;\
+    unsigned searchIndex;\
+    int result;\
+    unsigned reservedCount;\
+    unsigned itemCount;\
+    listType##Item* item;\
+    \
+    if( !(keyList && keyList->item && key && (*key) && destData) ) {\
+      return (-1);\
+    }\
+    \
+    reservedCount = keyList->reservedCount;\
+    itemCount = keyList->itemCount;\
+    item = keyList->item;\
+    \
+    /* Search for item */\
+    leftIndex = 0;\
+    rightIndex = itemCount;\
+    searchIndex = itemCount / 2;\
+    \
+    while( leftIndex < rightIndex ) {\
+      result = strcmp(item[searchIndex].key, key);\
+      \
+      if( result == 0 ) {\
+        return searchIndex;\
+      }\
+      \
+      if( result > 0 ) {\
+        rightIndex = searchIndex;\
+      } else {\
+        leftIndex = searchIndex + 1;\
+      }\
+      \
+      searchIndex = (leftIndex + rightIndex) / 2;\
+    }\
+    \
+    return (-1);\
   }
 
   #define DECLARE_STRING_KEYARRAY_RELEASEUNUSED( funcName, listType )\
@@ -833,6 +919,45 @@ SOFTWARE.
     }\
     \
     return 0;\
+  }
+
+  #define DECLARE_UINT_KEYARRAY_FINDINDEX( funcName, listType )\
+  int funcName( listType* keyList, unsigned key )\
+    unsigned leftIndex;\
+    unsigned rightIndex;\
+    unsigned searchIndex;\
+    unsigned reservedCount;\
+    unsigned itemCount;\
+    listType##Item* item;\
+    \
+    if( !(keyList && keyList->item && destData) ) {\
+      return (-1);\
+    }\
+    \
+    reservedCount = keyList->reservedCount;\
+    itemCount = keyList->itemCount;\
+    item = keyList->item;\
+    \
+    /* Search for insert position */\
+    leftIndex = 0;\
+    rightIndex = itemCount;\
+    searchIndex = itemCount / 2;\
+    \
+    while( leftIndex < rightIndex ) {\
+      if( item[searchIndex].key == key ) {\
+        return searchIndex;\
+      }\
+      \
+      if( item[searchIndex].key > key ) {\
+        rightIndex = searchIndex;\
+      } else {\
+        leftIndex = searchIndex + 1;\
+      }\
+      \
+      searchIndex = (leftIndex + rightIndex) / 2;\
+    }\
+    \
+    return (-1);\
   }
 
   #define DECLARE_UINT_KEYARRAY_RELEASEUNUSED( funcName, listType )\
