@@ -4,10 +4,12 @@
 
 /*
  *  File: strkey1.c
- *  Status: In progress
+ *  Status: Complete
  *
- *  Simple String Key Array Example
+ *  Simple String Key Array Example: Color to RGB Hex list
  *    by Orlando Llanes
+ *
+ *  Sample data source: Wikipedia via W3C (details below)
  *
  *  https://github.com/orlandol/keyarray
  */
@@ -22,12 +24,112 @@
   } SampleData;
 
   // sampleData declared at end of file for clarity
-  extern const SampleData sampleData[];
+  extern const SampleData sampleData[148];
+  const size_t sampleCount = sizeof(sampleData) / sizeof(sampleData[0]);
+
+/*
+ *  Color to RGB declarations
+ */
+
+  DECLARE_STRING_KEYARRAY_TYPES( ColorList, unsigned )
+
+  void FreeRGBItem( unsigned* data ) {
+  }
+
+  DECLARE_STRING_KEYARRAY_CREATE( CreateColorList, ColorList )
+  DECLARE_STRING_KEYARRAY_FREE( ReleaseColorList, ColorList, FreeRGBItem )
+
+  DECLARE_STRING_KEYARRAY_INSERT( InsertColor, ColorList, unsigned )
+  DECLARE_STRING_KEYARRAY_RETRIEVE( RetrieveRGB, ColorList, unsigned )
 
 /*
  *  Main program
  */
 int main( int argc, char* argv[] ) {
+  ColorList* svg1Colors = NULL;
+  size_t sampleIndex = 0;
+  char* sampleName = NULL;
+  unsigned sampleRGBValue = 0;
+  unsigned rgbValue = 0;
+
+  // Create color list
+  svg1Colors = CreateColorList(0);
+  if( svg1Colors == NULL ) {
+    printf( "Error allocating color list\n" );
+    return 1;
+  }
+
+  // Insert sample data into list
+  printf( "\nInserting sample data into list...\n" );
+  for( sampleIndex = 0; sampleIndex < sampleCount; sampleIndex++ ) {
+    sampleName = sampleData[sampleIndex].name;
+    sampleRGBValue = sampleData[sampleIndex].rgbValue;
+
+    // Attempt to add item to the list
+    if( InsertColor(svg1Colors, sampleName, &sampleRGBValue) == 0 ) {
+
+      // Check if item is duplicated
+      if( RetrieveRGB(svg1Colors, sampleName, &rgbValue) ) {
+        // If so, report duplicated item
+        printf( "  Item '%s' is already in the list.\n", sampleName );
+      } else {
+        // Otherwise, report general error
+        printf( "  Error inserting sample item: ('%s', %08X).\n",
+            sampleName, sampleRGBValue );
+      }
+      break;
+    }
+  }
+  printf( "Done.\n" );
+
+  // Retrieve select items
+  printf( "\nRetrieving select items...\n" );
+  if( RetrieveRGB(svg1Colors, "aliceblue", &rgbValue) ) { // First item
+    printf( "  Found '%s': RGB value = #%08X\n", "aliceblue", rgbValue );
+  } else {
+    printf( "  Item '%s' not found\n", "aliceblue" );
+  }
+
+  if( RetrieveRGB(svg1Colors, "crimson", &rgbValue) ) {
+    printf( "  Found '%s': RGB value = #%08X\n", "crimson", rgbValue );
+  } else {
+    printf( "  Item '%s' not found\n", "crimson" );
+  }
+
+  if( RetrieveRGB(svg1Colors, "sienna", &rgbValue) ) {
+    printf( "  Found '%s': RGB value = #%08X\n", "sienna", rgbValue );
+  } else {
+    printf( "  Item '%s' not found\n", "sienna" );
+  }
+
+  if( RetrieveRGB(svg1Colors, "olive", &rgbValue) ) {
+    printf( "  Found '%s': RGB value = #%08X\n", "olive", rgbValue );
+  } else {
+    printf( "  Item '%s' not found\n", "olive" );
+  }
+
+  if( RetrieveRGB(svg1Colors, "yellowgreen", &rgbValue) ) { // Last item
+    printf( "  Found '%s': RGB value = #%08X\n", "yellowgreen", rgbValue );
+  } else {
+    printf( "  Item '%s' not found\n", "yellowgreen" );
+  }
+
+  if( RetrieveRGB(svg1Colors, "cornsilk", &rgbValue) ) { // Duplicated item
+    printf( "  Found '%s': RGB value = #%08X\n", "cornsilk", rgbValue );
+  } else {
+    printf( "  Item '%s' not found\n", "cornsilk" );
+  }
+
+  if( RetrieveRGB(svg1Colors, "cherryred", &rgbValue) ) { // Not in list
+    printf( "  Found '%s': RGB value = #%08X\n", "cherryred", rgbValue );
+  } else {
+    printf( "  Item '%s' not found\n", "cherryred" );
+  }
+  printf( "Done.\n" );
+
+  // Release resources
+  ReleaseColorList( &svg1Colors );
+
   return 0;
 }
 
@@ -43,7 +145,7 @@ int main( int argc, char* argv[] ) {
  *  https://www.browserling.com/tools/random-lines
  *
  */
-  const SampleData sampleData[] = {
+  const SampleData sampleData[148] = {
     "olivedrab", 0x6B8E23,
     "floralwhite", 0xFFFAF0,
     "chocolate", 0xD2691E,
@@ -190,5 +292,6 @@ int main( int argc, char* argv[] ) {
     "springgreen", 0x00FF7F,
     "cadetblue", 0x5F9EA0,
     "darkgray", 0xA9A9A9,
-    "cornsilk", 0xFFF8DC
+    "cornsilk", 0xFFF8DC,
+    "cornsilk", 0x112233 // Intentional duplicate item/invalid value
   };
