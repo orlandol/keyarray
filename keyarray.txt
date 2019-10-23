@@ -1,44 +1,14 @@
 
-  Key Array Documentation
-  Copyright 2019 Orlando Llanes
+  ========================================
+  = Key Array Documentation              =
+  = Copyright 2019 Orlando Llanes        =
+  =                                      =
+  = https://github.com/orlandol/keyarray =
+  ========================================
 
-  https://github.com/orlandol/keyarray
-
-  =================
-  Table of Contents
-  =================
-  1) License
-
-  2) Introduction
-
-  3) Key types
-
-  4) Data types
-
-  5) Reference
-    5.1) List, item, and data type declarations
-    5.2) Allocate list function declarations
-    5.3) Free list, and developer free data, function declarations
-    5.4) Insert data function declarations
-    5.5) Remove data
-    5.6) Data lookup
-    5.7) Modify data
-    5.8) Find list index
-    5.9) Remove buffered space
-    5.10) Copy list
-
-  6) Examples
-    6.1) Simple String Key List - Color name to RGB value
-    6.2) Simple Unsigned Key List - TBD
-    6.3) Complex String Key List - TBD
-    6.4) Complex Unsigned Key List - TBD
-
-  A) Todo list
-    A.1) Implement string maximum length
-
-  ==========
-  1) License
-  ==========
+  =======
+  License
+  =======
 
   Key Array is released under the MIT license.
 
@@ -47,6 +17,36 @@
 
   You may include this documentation for convenience, however,
     doing so is not required.
+
+  =================
+  Table of Contents
+  =================
+  1) Introduction
+
+  2) Key types
+
+  3) Data types
+
+  4) Reference
+    4.1) List, item, and data type declarations
+    4.2) Allocate list function declarations
+    4.3) Free list, and developer free data, function declarations
+    4.4) Insert data function declarations
+    4.5) Remove data
+    4.6) Data lookup
+    4.7) Modify data
+    4.8) Find list index
+    4.9) Remove buffered space
+    4.10) Copy list
+
+  5) Examples
+    5.1) Simple String Key List - Color name to RGB value
+    5.2) Simple Unsigned Key List - TBD
+    5.3) Complex String Key List - Word statistics
+    5.4) Complex Unsigned Key List - TBD
+
+  A) Todo list
+    A.1) Implement string maximum length
 
   ===============
   2) Introduction
@@ -302,10 +302,9 @@
   -----------------------------------------------------
 
   File: strkey1.c
-  Status: In progress
+  Status: Complete
 
-  Reads an unsorted array of color name/hex value pairs,
-    into a string key array.
+  Reads an unsorted array of color name/hex value pairs.
 
   Demonstrates:
   - Declaration of a string key array.
@@ -320,12 +319,26 @@
   File: uintkey1.c
   Status: Planned
 
-  ----------------------------------
-  6.3) Complex String Key List - TBD
-  ----------------------------------
+  ----------------------------------------------
+  6.3) Complex String Key List - Word statistics
+  ----------------------------------------------
 
   File: strkey2.c
-  Status: Planned
+  Status: Started
+
+  Reads a text file into a word statistics list:
+  - The word before the first occurance
+  - Line of first occurance
+  - Column of first occurance
+  - Number of times word was repeated
+
+  Demonstrates:
+  - Creating a custom insert function
+  - Creating a custom retrieve function to create a copy of item data
+  - Using FindIndex to abstract item data modification
+  - Handling dynamic subfields in the data
+  - Copying a list
+  - Removing unused entries in a list
 
   ------------------------------------
   6.4) Complex Unsigned Key List - TBD
