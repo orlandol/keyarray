@@ -472,7 +472,7 @@ SOFTWARE.
     unsigned itemCount;\
     listType##Item* item;\
     \
-    if( !(keyList && keyList->item && key && (*key) && destData) ) {\
+    if( !(keyList && keyList->item && key && (*key) && sourceData) ) {\
       return 0;\
     }\
     \
@@ -515,7 +515,7 @@ SOFTWARE.
     unsigned itemCount;\
     listType##Item* item;\
     \
-    if( !(keyList && keyList->item && key && (*key) && destData) ) {\
+    if( !(keyList && keyList->item && key && (*key)) ) {\
       return (-1);\
     }\
     \
@@ -890,7 +890,7 @@ SOFTWARE.
     unsigned itemCount;\
     listType##Item* item;\
     \
-    if( !(keyList && keyList->item && destData) ) {\
+    if( !(keyList && keyList->item && sourceData) ) {\
       return 0;\
     }\
     \
@@ -922,7 +922,7 @@ SOFTWARE.
   }
 
   #define DECLARE_UINT_KEYARRAY_FINDINDEX( funcName, listType )\
-  int funcName( listType* keyList, unsigned key )\
+  int funcName( listType* keyList, unsigned key ) {\
     unsigned leftIndex;\
     unsigned rightIndex;\
     unsigned searchIndex;\
@@ -930,7 +930,7 @@ SOFTWARE.
     unsigned itemCount;\
     listType##Item* item;\
     \
-    if( !(keyList && keyList->item && destData) ) {\
+    if( !(keyList && keyList->item) ) {\
       return (-1);\
     }\
     \
