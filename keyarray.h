@@ -178,6 +178,7 @@ SOFTWARE.
 
   /* Remove buffered space
   DECLARE_STRING_KEYARRAY_RELEASEUNUSED( funcName, listType )
+  DECLARE_UINT_KEYARRAY_RELEASEUNUSED( funcName, listType )
 
   Declares a function as funcName, to remove buffered space
     void funcName( listType* keyList )
@@ -187,6 +188,8 @@ SOFTWARE.
 
   /* Copy list
   DECLARE_STRING_KEYARRAY_COPY( funcName, listType, dataType,
+      copyDataFunc, freeDataFunc )
+  DECLARE_UINT_KEYARRAY_COPY( funcName, listType, dataType,
       copyDataFunc, freeDataFunc )
 
   Declares a function as funcName, to copy a list:
