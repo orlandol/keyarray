@@ -195,8 +195,9 @@ SOFTWARE.
   Declares a function as funcName, to copy a list:
     listType* funcName( listType* sourceList )
 
-  Internally calls developer defined data copy function:
-    void copyDataFunc( dataType* dest, dataType* source ) {
+  Internally calls developer defined data copy function,
+    which returns 0 on failure, or any non-zero value on success:
+    int copyDataFunc( dataType* dest, dataType* source ) {
     ...
     }
 
@@ -615,8 +616,12 @@ SOFTWARE.
     }\
     \
     for( index = 0; index < itemCount; index++ ) {\
-      copyDataFunc( &(newCopy->item[index].data),\
-          &(sourceItem[index].data) );\
+      /* Direct copy by default, allowing copy function to be empty */\
+      newCopy->item[index].data = sourceItem[index].data;\
+      if( copyDataFunc(&(newCopy->item[index].data),\
+          &(sourceItem[index].data)) == 0 ) {\
+        goto ReturnError;\
+      }\
       \
       keyLen = strlen(sourceItem[index].key);\
       keyCopy = malloc(keyLen + 1);\
@@ -662,8 +667,7 @@ SOFTWARE.
  * ===================================
  */
 
-  #define DECLARE_UINT_KEYARRAY_TYPES(\
-      typeName, dataType )\
+  #define DECLARE_UINT_KEYARRAY_TYPES( typeName, dataType )\
   typedef struct typeName##Item {\
     unsigned key;\
     dataType data;\
@@ -750,7 +754,7 @@ SOFTWARE.
         return 0;\
       }\
       \
-      item = realloc(item, reservedCount * sizeof(listType##Item));\
+      item = (listType##Item*)realloc(item, reservedCount * sizeof(listType##Item));\
       if( item == NULL ) {\
         return 0;\
       }\
@@ -1026,8 +1030,12 @@ SOFTWARE.
     }\
     \
     for( index = 0; index < itemCount; index++ ) {\
-      copyDataFunc( &(newCopy->item[index].data),\
-          &(sourceItem[index].data) );\
+     /* Direct copy by default, allowing copy function to be empty */\
+      newCopy->item[index].data = sourceItem[index].data;\
+      if( copyDataFunc(&(newCopy->item[index].data),\
+          &(sourceItem[index].data)) == 0 ) {\
+        goto ReturnError;\
+      }\
       \
       newCopy->item[index].key = sourceItem[index].key;\
     }\

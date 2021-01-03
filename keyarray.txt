@@ -264,6 +264,7 @@
   5.9) Remove buffered space
   --------------------------
   DECLARE_STRING_KEYARRAY_RELEASEUNUSED( funcName, listType )
+  DECLARE_UINT_KEYARRAY_RELEASEUNUSED( funcName, listType )
 
   Declares a function as funcName, to remove buffered space
     void funcName( listType* keyList )
@@ -275,12 +276,15 @@
   ---------------
   DECLARE_STRING_KEYARRAY_COPY( funcName, listType, dataType,
       copyDataFunc, freeDataFunc )
+  DECLARE_UINT_KEYARRAY_COPY( funcName, listType, dataType,
+      copyDataFunc, freeDataFunc )
 
   Declares a function as funcName, to copy a list:
     listType* funcName( listType* sourceList )
 
-  Internally calls developer defined data copy function:
-    void copyDataFunc( dataType* dest, dataType* source ) {
+  Internally calls developer defined data copy function,
+    which returns 0 on failure, or any non-zero value on success:
+    int copyDataFunc( dataType* dest, dataType* source ) {
     ...
     }
 
